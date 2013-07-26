@@ -12,6 +12,7 @@ package
 			setUpStarling();
 			
 			state = new GameState();
+			trace("ten");
 			
 			//state = new BlittingGameState();
 			
