@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with TexturePacker http://www.codeandweb.com/texturepacker-->
+<!-- $TexturePacker:SmartUpdate:93df497214220fa88544d9f0a8cf22a9$ -->
+<TextureAtlas imagePath="mySpriteSheets.png">
+    <SubTexture name="vampire" x="2" y="2" width="78" height="166" frameX="-21" frameY="-5" frameWidth="120" frameHeight="182"/>
+</TextureAtlas>
