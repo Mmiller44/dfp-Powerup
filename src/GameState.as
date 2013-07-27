@@ -130,10 +130,10 @@ package
 			//_crate.view = new pistolCrate();
 			_crate.name = "firstPistol";
 			_crate.x = Math.random() * 1400 + 20;
-			_crate.y = 270;
+			_crate.y = 365;
 			add(_crate);
 			
-			var floor:Platform = new Platform("floor", {x:600, y:400, width:2000, height:100});
+			var floor:Platform = new Platform("floor", {x:600, y:460, width:2000, height:100});
 			//floor.view = new Quad(2000,100,0xff0000);
 			add(floor);
 			
@@ -168,26 +168,21 @@ package
 			}
 			
 			// This is calling the crates to spawn every 5 seconds.
-			_delayedCall = new DelayedCall(crateSpawnTimer, 20.0);
+			_delayedCall = new DelayedCall(crateSpawnTimer, 10.0);
 			_delayedCall.repeatCount = 1;
 			Starling.juggler.add(_delayedCall);
 			
 		}
 		
 		protected function crateSpawnTimer():void
-		{
-			// If there is already a crate on the screen I need to remove it, this is called 10 seconds after the crate spwns
-			var delayedCall:DelayedCall = new DelayedCall(crateRemoval, 10.0);
-			delayedCall.repeatCount = 0;
-			Starling.juggler.add(delayedCall);
-			
+		{			
 			var i:uint = Math.random() * 3 + 0;
 			
 			// Creating a new crate.
 			_crate = new CitrusSprite("crate",{view:Image.fromBitmap(new defaultPistol())});
 			_crate.name = _crateArray[i]; // Randomizing what crate will be deployed.
 			_crate.x = Math.random() * 1400 + 20;
-			_crate.y = 270;
+			_crate.y = 365;
 			
 			if(_crate.name == "machineGun")
 			{
