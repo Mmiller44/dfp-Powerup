@@ -3,9 +3,8 @@ package
 	import Box2D.Common.Math.b2Vec2;
 	import Box2D.Common.b2internal;
 	import Box2D.Dynamics.Contacts.b2Contact;
+	import Box2D.Dynamics.b2Body;
 	import Box2D.Dynamics.b2World;
-	
-	import away3d.controllers.FollowController;
 	
 	import citrus.core.CitrusEngine;
 	import citrus.core.CitrusGroup;
@@ -18,22 +17,18 @@ package
 	import citrus.objects.platformer.box2d.Hero;
 	import citrus.objects.platformer.box2d.Missile;
 	import citrus.objects.platformer.box2d.Platform;
-	import citrus.objects.platformer.box2d.Sensor;
+	import citrus.physics.PhysicsCollisionCategories;
 	import citrus.physics.box2d.Box2D;
-	import citrus.physics.box2d.Box2DUtils;
 	import citrus.physics.box2d.IBox2DPhysicsObject;
 	import citrus.view.blittingview.AnimationSequence;
 	import citrus.view.blittingview.BlittingArt;
 	import citrus.view.starlingview.AnimationSequence;
 	
-	import feathers.controls.ProgressBar;
-	
 	import flash.events.Event;
+	import flash.events.KeyboardEvent;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 	import flash.media.Sound;
-	
-	import nape.constraint.PulleyJoint;
 	
 	import starling.animation.DelayedCall;
 	import starling.animation.Juggler;
@@ -42,12 +37,11 @@ package
 	import starling.display.Image;
 	import starling.display.MovieClip;
 	import starling.display.Quad;
-	import starling.text.TextField;
 	
 	public class GameState extends StarlingState
-	{
-		[Embed(source="hero_small.png")]
-		private var hero_toon:Class;
+	{	
+		[Embed(source="hero-sword.png")]
+		private var hero_sword:Class;
 		
 		[Embed(source="hero-pistol.png")]
 		private var hero_Gun:Class;
@@ -67,8 +61,8 @@ package
 		[Embed(source="forestBackground.jpg")]
 		public var BackgroundPic:Class;
 		
-		[Embed(source="box-pistol.png")]
-		public var pistolCrate:Class;
+		[Embed(source="pistolcrate.jpg")]
+		public var defaultPistol:Class;
 		
 		[Embed(source="box-health.png")]
 		public var healthCrate:Class;
@@ -82,18 +76,32 @@ package
 		[Embed(source="Ammo.mp3")]
 		public static const SND_AMMO:Class;
 		
+		[Embed(source="Splat.mp3")]
+		public static const Bite:Class;
+		
+		[Embed(source="Kill_Streak.mp3")]
+		public static const Boss:Class;
+		
+		[Embed(source="Health.mp3")]
+		public static const Health:Class;
+		
 		[Embed(source="bullet.png")]
 		public static var bulletEMBD:Class;
 		
 		private var _hero:ShootingHero;
 		private var _enemies:Array = [];
 		private var _bulletcounter:uint = 0;
-		private var _crate:Crate;
-		private var _crateArray:Array = ["machineGun","pistolGun","health"];
+		private var _crate:CitrusSprite;
+		private var _crateArray:Array = ["machineGun", "health", "firstPistol"];
 		private var _delayedCall:DelayedCall;
+		private var _bgs:BlittingGameState = new BlittingGameState();
+		private var _enemyCounter:Number = 0;
 		
 		public static var sndAmmo:Sound = new SND_AMMO() as Sound;
-		
+		public static var BiteSound:Sound = new Bite() as Sound;
+		public static var BossSpeech:Sound = new Boss() as Sound;
+		public static var HealthSound:Sound = new Health as Sound;
+
 		
 		public function GameState()
 		{
@@ -117,9 +125,12 @@ package
 			background.y = -270;
 			add(background);
 			
-			_crate = new Crate("crate",{x:Math.random() * 1400 + 20,y:00,width:30,height:30});
-			_crate.view = new pistolCrate();
-			_crate.name = "pistolGun";
+			//_crate = new CitrusSprite("crate",{x:Math.random() * 1400 + 20,y:00,width:30,height:30});
+			_crate = new CitrusSprite("crate", {view:Image.fromBitmap(new defaultPistol())});
+			//_crate.view = new pistolCrate();
+			_crate.name = "firstPistol";
+			_crate.x = Math.random() * 1400 + 20;
+			_crate.y = 270;
 			add(_crate);
 			
 			var floor:Platform = new Platform("floor", {x:600, y:400, width:2000, height:100});
@@ -135,30 +146,25 @@ package
 			add(wallLeft);
 			
 			_hero = new ShootingHero("hero", {x:stage.stageWidth/2, y:150, width:70, height:125});
-			_hero.view = new hero_toon();
-			_hero.hurtVelocityX = -10;
-			_hero.hurtVelocityY = -10;
-			_hero.killVelocity = 100;
-			_hero.jumpHeight = 15;
-			_hero.hurtDuration = 1000;
-			_hero.maxVelocity = 5;
+			_hero.view = new hero_sword();
 			add(_hero);
 			
 			view.camera.setUp(_hero, new Point(stage.stageWidth / 2, stage.stageHeight / 2), new Rectangle(0, 0, 1550, 450), new Point(.25, .05));
 			
 			for(var i:uint= 0; i < 3; i++)
 			{					
-				var enemy:Enemy = new Enemy("enemy", {x:Math.random() * (i + 1), y:390, width:70, height:130, leftBound:10, rightBound:1560});
+				var enemy:OurEnemy = new OurEnemy("BadGuys", {x:Math.random() * (i + 1), y:390, width:70, height:130, leftBound:10, rightBound:1560});
 				enemy.view = new enemy_toon();
-				enemy.hurtDuration = 200;
 				_enemies.push(enemy);
 				add(enemy);
-				
-				//				var enemy2:Enemy = new Enemy("enemy", {x:900, y:100, width:70, height:70, leftBound:10, rightBound:1000});
-				//				enemy2.view = new enemy_toon2();
-				//				enemy2.speed = 3;
-				//				_enemies.push(enemy2);
-				//				add(enemy2);
+			}
+			
+			for(var j:uint= 0; j < 3; j++)
+			{					
+				var enemy2:OurEnemy = new OurEnemy("BadGuys", {x:Math.random() * (1900), y:390, width:70, height:130, leftBound:10, rightBound:1560});
+				enemy2.view = new enemy_toon();
+				_enemies.push(enemy2);
+				add(enemy2);
 			}
 			
 			// This is calling the crates to spawn every 5 seconds.
@@ -166,9 +172,6 @@ package
 			_delayedCall.repeatCount = 1;
 			Starling.juggler.add(_delayedCall);
 			
-			//			var textField:TextField = new TextField(100,50,"Kill Count","Arial",18,0xffffff,true);
-			//			textField.x = 100;
-			//			textField.y = 100;
 		}
 		
 		protected function crateSpawnTimer():void
@@ -181,8 +184,10 @@ package
 			var i:uint = Math.random() * 3 + 0;
 			
 			// Creating a new crate.
-			_crate = new Crate("crate",{x:Math.random() * 1400 + 20,y:00,width:30,height:30});
+			_crate = new CitrusSprite("crate",{view:Image.fromBitmap(new defaultPistol())});
 			_crate.name = _crateArray[i]; // Randomizing what crate will be deployed.
+			_crate.x = Math.random() * 1400 + 20;
+			_crate.y = 270;
 			
 			if(_crate.name == "machineGun")
 			{
@@ -191,9 +196,10 @@ package
 			}
 			if(_crate.name == "pistolGun")
 			{
-				_crate.view = new pistolCrate();
+				_crate.view = new defaultPistol();
 				
 			}
+			
 			if(_crate.name == "health")
 			{
 				_crate.view = new healthCrate();
@@ -227,8 +233,9 @@ package
 				{
 					if(distance < radius1 + radius2)
 					{
-						trace(_hero.hurtDuration)
-						_hero.hurtDuration -= 100;
+						trace(_hero.hurtDuration);
+						
+						_hero.hurtDuration -= 1;
 						
 						if(_hero.hurtDuration < 400)
 						{
@@ -236,10 +243,12 @@ package
 						}
 						
 						// play hurt noises here
+						BiteSound.play(0,2);
 						
 						if(_hero.hurtDuration <= 0)
 						{
 							_hero.kill = true;
+							_hero.destroy();
 							// Go to the game over screen here.
 						}
 					}
@@ -255,32 +264,29 @@ package
 							enemy.kill = true;
 							remove(ShootingHero.bullet);
 							ShootingHero.bullet.y = 1000000000000;
+							_enemyCounter++;
 						}
-						
 					}	
 				}
 				
 				if(enemy.kill)
 				{
-					trace(_enemies.indexOf(enemy));
-					_enemies.splice(_enemies.indexOf(enemy), 1);
+					_enemies.splice(_enemies.indexOf(enemy), 1);									
 				}
 				
 				if(_enemies.length <= 0)
 				{
-					spawnBoss();
+					// Wipe off the stage
+					// killAllObjects();
 				}
 			}
 		}
 		
 		private function spawnBoss():void
 		{
+			BossSpeech.play(0,0);
 			
-			//			var middlePlatform:Platform = new Platform("Middle", {x:stage.stageWidth/2, y:100, width:200, height:50});
-			//			middlePlatform.view = new Quad(0,800,0xff0000);
-			//			add(middlePlatform);
-			
-			var vampBoss:Enemy = new Enemy("enemy", {x:1200, y:390, width:165, height:322, leftBound:10, rightBound:1560});
+			var vampBoss:OurEnemy = new OurEnemy("BadGuys", {x:1200, y:390, width:165, height:322, leftBound:10, rightBound:1560});
 			vampBoss.view = new vampireBoss;
 			//vampBoss.hurtDuration = 2000;
 			add(vampBoss);
@@ -343,41 +349,43 @@ package
 			
 			if(!_hero.kill && crateDistance < crateRadius1 + crateRadius2)
 			{
-				trace("touching crate");
-				crateDistance = 12000;
+				_crate.x = 100000000;
+				_crate.y = 100000000;
 				
-				// Set an if conditional to display the hero according to what crate was picked up.
-				if(_crate.name == "pistolGun")
+				if(_crate.name == "firstPistol")
 				{
-					// Play sound effect
 					sndAmmo.play(0,0);
 					
 					_hero.view = new hero_Gun();
-					// Remove the crate from the screen.
 					remove(_crate);
+					_ce.stage.removeEventListener(KeyboardEvent.KEY_DOWN, _hero.onKeyDown);
 					
 				}
-				
+												
 				if(_crate.name == "machineGun")
 				{
 					// Play sound effect
 					sndAmmo.play(0,0);
 					
 					_hero.view = new hero_machineGun();
+					
+					// This is calling the function to shoot as a machine gun. Which is in the ShootingHero class
+					_ce.stage.addEventListener(KeyboardEvent.KEY_DOWN, _hero.onKeyDown);
+					
 					// Remove the crate from the screen.
 					remove(_crate);
-					// Set Noise for picking up a gun.
 					
 				}
 				
 				if(_crate.name == "health")
 				{
 					// Play sound effect
+					HealthSound.play(0,0);
 					
 					if(_hero.hurtDuration < 1000)
 					{
 						_hero.hurtDuration += 400;
-						remove(_crate);						
+						remove(_crate);				
 					}
 					
 					if(_hero.hurtDuration > 1000)
@@ -388,7 +396,6 @@ package
 					trace(_hero.hurtDuration);
 					// Remove the crate from the screen.
 					remove(_crate);
-					// Set Noise for picking up HEALTH.
 				}
 			}
 		}
