@@ -1,10 +1,6 @@
 package
 {
-	import Box2D.Dynamics.Contacts.b2Contact;
-	
-	import citrus.core.CitrusEngine;
 	import citrus.core.starling.StarlingState;
-	import citrus.input.controllers.Keyboard;
 	import citrus.objects.CitrusSprite;
 	import citrus.objects.platformer.box2d.Enemy;
 	import citrus.objects.platformer.box2d.Platform;
@@ -17,9 +13,6 @@ package
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 	import flash.media.Sound;
-	
-	import io.arkeus.ouya.ControllerInput;
-	import io.arkeus.ouya.controller.OuyaController;
 	
 	import starling.animation.DelayedCall;
 	import starling.core.Starling;
