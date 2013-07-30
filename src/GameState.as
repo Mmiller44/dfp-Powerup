@@ -1,6 +1,10 @@
 package
 {
+	import Box2D.Dynamics.Contacts.b2Contact;
+	
+	import citrus.core.CitrusEngine;
 	import citrus.core.starling.StarlingState;
+	import citrus.input.controllers.Keyboard;
 	import citrus.objects.CitrusSprite;
 	import citrus.objects.platformer.box2d.Enemy;
 	import citrus.objects.platformer.box2d.Platform;
@@ -14,9 +18,13 @@ package
 	import flash.geom.Rectangle;
 	import flash.media.Sound;
 	
+	import io.arkeus.ouya.ControllerInput;
+	import io.arkeus.ouya.controller.OuyaController;
+	
 	import starling.animation.DelayedCall;
 	import starling.core.Starling;
 	import starling.display.Image;
+	import starling.display.Quad;
 	import starling.textures.Texture;
 	import starling.textures.TextureAtlas;
 	
@@ -27,6 +35,30 @@ package
 		
 		[Embed(source="assets/spritesheets/hero_sword.png")]
 		private var _heroPng:Class;
+		
+		[Embed(source="assets/spritesheets/werewolf.xml", mimeType="application/octet-stream")]
+		private var _werewolfConfig:Class;
+		
+		[Embed(source="assets/spritesheets/werewolf.png")]
+		private var _werewolfPng:Class;
+		
+		[Embed(source="assets/spritesheets/werewolf_boss.xml", mimeType="application/octet-stream")]
+		private var _werewolfBossConfig:Class;
+		
+		[Embed(source="assets/spritesheets/werewolf_boss.png")]
+		private var _werewolfBossPng:Class;
+		
+		[Embed(source="assets/spritesheets/vampire.xml", mimeType="application/octet-stream")]
+		private var _vampireConfig:Class;
+		
+		[Embed(source="assets/spritesheets/vampire.png")]
+		private var _vampirePng:Class;
+		
+		[Embed(source="assets/spritesheets/vampire_boss.xml", mimeType="application/octet-stream")]
+		private var _vampireBossConfig:Class;
+		
+		[Embed(source="assets/spritesheets/vampire_boss.png")]
+		private var _vampireBossPng:Class;
 		
 		[Embed(source="assets/spritesheets/hero_sniper.xml", mimeType="application/octet-stream")]
 		private var _heroSniperConfig:Class;
@@ -82,6 +114,9 @@ package
 		[Embed(source="assets/images/vampire_Boss.png")]
 		public var vampireBoss:Class;
 		
+		[Embed(source="assets/images/HUD.png")]
+		public var HealthBar:Class;
+		
 		[Embed(source="assets/sound/Ammo.mp3")]
 		public static const SND_AMMO:Class;
 		
@@ -109,10 +144,22 @@ package
 		private var _Herotexture:Texture;
 		private var _Heroxml:XML;
 		private var _HerosTextureAtlas:TextureAtlas;
+		private var _enemybitmap:Bitmap;
+		private var _enemytexture:Texture;
+		private var _enemyxml:XML;
+		private var _enemysTextureAtlas:TextureAtlas;
+		private var _spawning:Boolean = true;
+		private var _hud:CitrusSprite;
+		private var _healthFill:Platform;
+		private var _bossSpawn:Boolean = false;
+		private var _main:Main;
+
+		public static var _vampBoss:OurEnemy;
 		
 		public function GameState()
 		{
 			super();
+			
 		}
 		
 		override public function initialize():void
@@ -127,11 +174,16 @@ package
 			_Heroxml= XML(new _heroConfig());
 			_HerosTextureAtlas = new TextureAtlas(_Herotexture, _Heroxml);
 			
+			_enemybitmap = new _werewolfPng();
+			_enemytexture = Texture.fromBitmap(_enemybitmap);
+			_enemyxml= XML(new _werewolfConfig());
+			_enemysTextureAtlas = new TextureAtlas(_enemytexture, _enemyxml);
+			
 			var physics:Box2D = new Box2D("box2d");
 			physics.view = null;
 			//physics.visible = true;
 			add(physics);
-			
+
 			var background:CitrusSprite = new CitrusSprite("background", {view:Image.fromBitmap(new BackgroundPic())});
 			background.x = 0;
 			background.y = -270;
@@ -152,8 +204,19 @@ package
 			var wallLeft:Platform = new Platform("leftWall", {x:0, y:200, width:50, height:800, oneWay:true});
 			add(wallLeft);
 			
+			
+			_healthFill = new Platform("healthbar", {x:260, y:-200, width:200, height:20});
+			_healthFill.view = new Quad(250,25,0xff0000);
+			add(_healthFill);
+			
+			_hud = new CitrusSprite("hud", {view:Image.fromBitmap(new HealthBar())});
+			_hud.x = 10;
+			_hud.y = -250;
+			add(_hud);
+			
 			_hero = new ShootingHero("hero", {x:stage.stageWidth/2, y:150, width:70, height:125});
-			_hero.view = new AnimationSequence(_HerosTextureAtlas,["walk", "duck", "idle", "jump", "hurt"], "idle");
+			_hero.view = new AnimationSequence(_HerosTextureAtlas,["walk", "duck", "slash", "idle", "jump", "hurt"], "idle");
+			_hero.name = "sword";
 			add(_hero);
 			
 			view.camera.setUp(_hero, new Point(stage.stageWidth / 2, stage.stageHeight / 2), new Rectangle(0, 0, 1550, 450), new Point(.25, .05));
@@ -161,7 +224,7 @@ package
 			for(var i:uint= 0; i < 3; i++)
 			{					
 				var enemy:OurEnemy = new OurEnemy("BadGuys", {x:-150, y:390, width:70, height:130, leftBound:10, rightBound:1560});
-				enemy.view = new enemy_toon();
+				enemy.view = new AnimationSequence(_enemysTextureAtlas,["walk","idle"], "idle");
 				_enemies.push(enemy);
 				add(enemy);
 			}
@@ -169,7 +232,7 @@ package
 			for(var j:uint= 0; j < 3; j++)
 			{					
 				var enemy2:OurEnemy = new OurEnemy("BadGuys", {x:1750, y:390, width:70, height:130, leftBound:10, rightBound:1560});
-				enemy2.view = new enemy_toon();
+				enemy2.view = new AnimationSequence(_enemysTextureAtlas,["walk","idle"], "idle");
 				_enemies.push(enemy2);
 				add(enemy2);
 			}
@@ -196,12 +259,10 @@ package
 			if(_crate.name == "machineGun")
 			{
 				_crate.view = new machineGunCrate();
-				
 			}
 			if(_crate.name == "pistolGun")
 			{
 				_crate.view = new defaultPistol();
-				
 			}
 			
 			if(_crate.name == "health")
@@ -234,7 +295,7 @@ package
 		private function onUpdate():void
 		{	
 			grabCrate();
-			
+						
 			if(_hero.x <= 30)
 			{
 				_hero.x = 30;
@@ -244,7 +305,50 @@ package
 			{
 				_hero.x = 1520;
 			}
-
+			
+			if(_hero.x > 610)
+			{
+				_hud.x = _hero.x - 600;
+			}
+			
+			if(_hero.x > 890)
+			{
+				_hud.x = 290;
+			}
+			
+			_healthFill.x = _hud.x + 15 + _healthFill.width;
+			
+			if(_hero.hurtDuration < 800)
+			{
+				_healthFill.view = new Quad(200,25,0xff0000);
+				_healthFill.x = _hud.x - 10 + _healthFill.width;
+			}
+			
+			if(_hero.hurtDuration < 600)
+			{
+				_healthFill.view = new Quad(150,25,0xff0000);
+				_healthFill.x = _hud.x - 50 + _healthFill.width;
+			}
+			
+			if(_hero.hurtDuration < 400)
+			{
+				_healthFill.view = new Quad(100,25,0xff0000);
+				_healthFill.x = _hud.x - 80 + _healthFill.width;
+			}
+			
+			if(_hero.hurtDuration < 200)
+			{
+				_healthFill.view = new Quad(50,25,0xff0000);
+				_healthFill.x = _hud.x - 120 + _healthFill.width;
+			}
+			
+			if(_hero.hurtDuration <= 0)
+			{
+				_healthFill.view = new Quad(0,25,0xff0000);
+				_healthFill.x = _hud.x - 120 + _healthFill.width;
+			}
+			
+			
 			for each (var enemy:Enemy in _enemies) 
 			{
 				var p1:Point = new Point(_hero.x, _hero.y);
@@ -261,11 +365,6 @@ package
 						
 						_hero.hurtDuration -= 4;
 						
-						if(_hero.hurtDuration < 400)
-						{
-							// possible blood splats on the screen.
-						}
-						
 						// play hurt noises here
 						BiteSound.play(0,0);
 						
@@ -277,6 +376,13 @@ package
 						}
 					}
 					
+//					if(distance < radius1 + radius2 && _ce.input.keyboard.addKeyAction("shoot", citrus.input.controllers.Keyboard.DOWN))
+//					{						
+//						enemy.kill = true;
+//						_enemyCounter++;
+//						spawnEnemy();
+//					}
+//					
 					if(ShootingHero.bullet)
 					{
 						var p3:Point = new Point(ShootingHero.bullet.x, ShootingHero.bullet.y);
@@ -296,94 +402,108 @@ package
 				
 				if(enemy.kill)
 				{
-					_enemies.splice(_enemies.indexOf(enemy), 1);									
+					_enemies.splice(_enemies.indexOf(enemy), 1);
 				}
 			}
+			
+			if(_bossSpawn)
+			{
+				var p1:Point = new Point(_hero.x, _hero.y);
+				var p2:Point = new Point(_vampBoss.x, _vampBoss.y);
+				var p3:Point = new Point(ShootingHero.bullet.x,ShootingHero.bullet.y);
+				var bulletDistance:Number = Point.distance(p2,p3);
+				var distance:Number = Point.distance(p1, p2);
+				var radius1:Number = _vampBoss.width;
+				
+				if(!_vampBoss.kill && distance < radius1)
+				{
+					_hero.hurtDuration -= 5;
+					
+					if(_hero.hurtDuration < 400)
+					{
+						// possible blood splats on the screen.
+					}
+					
+					// play hurt noises here
+					
+					if(_hero.hurtDuration <= 0)
+					{
+						_hero.kill = true;
+						// Go to the game over screen here.
+					}
+				}
+									
+					if(!_vampBoss.kill && bulletDistance <= radius1)
+					{
+						remove(ShootingHero.bullet);
+						_vampBoss.hurtDuration -= 2;
+					}
+				
+				if(_vampBoss.hurtDuration <= 0)
+				{
+					_vampBoss.kill = true;
+					
+					if(_vampBoss.hurtDuration <= 0)
+					{
+
+					}
+				}
+			}
+			
 		}
 		
 		private function spawnEnemy():void
 		{
-			for(var i:uint= 0; i < 1; i++)
-			{					
-				var enemy:OurEnemy = new OurEnemy("BadGuys", {x:-150, y:390, width:70, height:130, leftBound:10, rightBound:1560});
-				enemy.view = new enemy_toon();
-				_enemies.push(enemy);
-				add(enemy);
-			}
-			
-			for(var j:uint= 0; j < 1; j++)
-			{					
-				var enemy2:OurEnemy = new OurEnemy("BadGuys", {x:1750, y:390, width:70, height:130, leftBound:10, rightBound:1560});
-				enemy2.view = new enemy_toon();
-				_enemies.push(enemy2);
-				add(enemy2);
-			}
-			
-			if(_enemyCounter >= 25)
+			if(_spawning)
 			{
-				for each (var badGuy:OurEnemy in _enemies) 
-				{
-					remove(badGuy);
+				
+				for(var i:uint= 0; i < 1; i++)
+				{					
+					var enemy:OurEnemy = new OurEnemy("BadGuys", {x:-150, y:390, width:70, height:130, leftBound:10, rightBound:1560});
+					enemy.view = new AnimationSequence(_enemysTextureAtlas,["walk","idle"], "idle");
+					_enemies.push(enemy);
+					add(enemy);
 				}
 				
+				for(var j:uint= 0; j < 1; j++)
+				{					
+					var enemy2:OurEnemy = new OurEnemy("BadGuys", {x:1750, y:390, width:70, height:130, leftBound:10, rightBound:1560});
+					enemy2.view = new AnimationSequence(_enemysTextureAtlas,["walk","idle"], "idle");
+					_enemies.push(enemy2);
+					add(enemy2);
+				}
+				
+				if(_enemyCounter == 25)
+				{
+					_spawning = false;
+				}
+	
+			}
+			
+			trace(_enemies.length);
+			
+			if(_enemies.length == 1)
+			{
 				spawnBoss();
 			}
 		}
 		
 		private function spawnBoss():void
 		{
+			_bossSpawn = true;
+			
 			BossSpeech.play(0,0);
 			
-			var vampBoss:OurEnemy = new OurEnemy("BadGuys", {x:1200, y:390, width:165, height:322, leftBound:10, rightBound:1560});
-			vampBoss.view = new vampireBoss;
-			//vampBoss.hurtDuration = 2000;
-			add(vampBoss);
+			_enemybitmap = new _werewolfBossPng();
+			_enemytexture = Texture.fromBitmap(_enemybitmap);
+			_enemyxml= XML(new _werewolfBossConfig());
+			_enemysTextureAtlas = new TextureAtlas(_enemytexture, _enemyxml);
 			
-			var p1:Point = new Point(_hero.x, _hero.y);
-			var p2:Point = new Point(vampBoss.x, vampBoss.y);				
-			var distance:Number = Point.distance(p1, p2);
-			var radius1:Number = vampBoss.width / 2;
-			var radius2:Number = vampBoss.width / 2;
+			_vampBoss = new OurEnemy("BadGuys", {x:1750, y:390, width:70, height:130, leftBound:10, rightBound:1560});
+			_vampBoss.view = new AnimationSequence(_enemysTextureAtlas,["walk","idle"], "idle");
+			_vampBoss.hurtDuration = 100;
+			add(_vampBoss);
 			
-			if(!vampBoss.kill && distance < radius1 + radius2)
-			{
-				_hero.hurtDuration -= 200;
-				
-				if(_hero.hurtDuration < 400)
-				{
-					// possible blood splats on the screen.
-				}
-				
-				// play hurt noises here
-				
-				if(_hero.hurtDuration <= 0)
-				{
-					_hero.kill = true;
-					// Go to the game over screen here.
-				}
-			}
-			
-			if(ShootingHero.bullet)
-			{
-				var p3:Point = new Point(ShootingHero.bullet.x, ShootingHero.bullet.y);
-				var bulletDistance:Number = Point.distance(p2,p3);
-				trace(radius1);
-				trace(radius2);
-				trace(bulletDistance);
-				
-				if(!vampBoss.kill && bulletDistance <= radius1 + radius2)
-				{
-					trace("HIT BOSS");
-					
-					vampBoss.kill = true;
-					remove(ShootingHero.bullet);
-				}
-			}
-			
-			if(vampBoss.kill)
-			{
-				
-			}
 		}
 		
 		private function grabCrate():void
@@ -478,14 +598,19 @@ package
 					if(_hero.hurtDuration < 1000)
 					{
 						_hero.hurtDuration += 400;
+						onUpdate();
 						remove(_crate);				
 					}
 					
 					if(_hero.hurtDuration >= 1000)
 					{
 						_hero.hurtDuration == 1000;
+						_healthFill.view = new Quad(250,25,0xff0000);
+						_healthFill.x = _hud.x + 15 + _healthFill.width;
+						onUpdate();
 					}
 					
+					onUpdate();
 					// Remove the crate from the screen.
 					remove(_crate);
 				}

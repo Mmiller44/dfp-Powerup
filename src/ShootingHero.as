@@ -20,9 +20,11 @@ package
 		public static var bulletShoot:Class;
 		public static var ShootSound:Sound = new bulletShoot() as Sound;
 		
-		[Embed(source="assets/sound/Machine_Gun.mp3")]
-		public static var Machinegun:Class;
 		public static var MachineGunShot:Sound = new bulletShoot() as Sound;
+		
+		[Embed(source="assets/sound/Sniper_Fire.mp3")]
+		public static var sniperGun:Class;
+		public static var SniperShot:Sound = new sniperGun() as Sound;
 		
 		private var _bulletsLeft:Number = 10;
 
@@ -98,9 +100,20 @@ package
 			}
 		}
 		
+		
 		override public function update(timeDelta:Number):void
 		{
 			super.update(timeDelta);
+			
+			if(this.name == "sword")
+			{
+				_ce.input.keyboard.addKeyAction("slash", citrus.input.controllers.Keyboard.A);
+			}
+			
+			if((_ce.input.justDid("slash") && this.name == "sword"))
+			{
+				trace("hello");
+			}
 			
 			if(bullet)
 			{
@@ -133,6 +146,7 @@ package
 			if(_ce.input.justDid("shoot") && this.name == "heroSniper")
 			{
 				// Input sniper sound
+				SniperShot.play(0,0);
 				
 				if(_inverted)
 				{
