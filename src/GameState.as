@@ -169,7 +169,7 @@ package
 			startScreen.y = 0;
 			add(startScreen);
 			
-			setTimeout(onStart, 10000);
+			setTimeout(onStart, 5000);
 			startScreen.destroy();
 		}
 		
@@ -224,23 +224,26 @@ package
 			
 			_hero = new ShootingHero("hero", {x:stage.stageWidth/2, y:150, width:70, height:125});
 			_hero.view = new AnimationSequence(_HerosTextureAtlas,["walk", "duck", "idle", "jump", "hurt"], "idle");
+			_hero.hurtDuration = 1500;
 			_hero.name = "heroPistol";
 			add(_hero);
 			
 			view.camera.setUp(_hero, new Point(stage.stageWidth / 2, stage.stageHeight / 2), new Rectangle(0, 0, 1550, 450), new Point(.25, .05));
 			
-			for(var i:uint= 0; i < 3; i++)
+			for(var i:uint= 0; i < 2; i++)
 			{					
 				var enemy:OurEnemy = new OurEnemy("BadGuys", {x:-150, y:390, width:70, height:130, leftBound:10, rightBound:1560});
 				enemy.view = new AnimationSequence(_enemysTextureAtlas,["walk","idle"], "idle");
+				enemy..hurtDuration = 10;
 				_enemies.push(enemy);
 				add(enemy);
 			}
 			
-			for(var j:uint= 0; j < 3; j++)
+			for(var j:uint= 0; j < 1; j++)
 			{					
 				var enemy2:OurEnemy = new OurEnemy("BadGuys", {x:1750, y:390, width:70, height:130, leftBound:10, rightBound:1560});
 				enemy2.view = new AnimationSequence(_enemysTextureAtlas,["walk","idle"], "idle");
+				enemy2.hurtDuration = 10;
 				_enemies.push(enemy2);
 				add(enemy2);
 			}
@@ -396,14 +399,44 @@ package
 						var bulletDistance:Number = Point.distance(p2,p3);
 						
 						// if the bullet hits the enemy
-						if(bulletDistance < radius1 + radius2)
+						if(bulletDistance < radius1 + radius2 && _hero.name == "heroSniper")
 						{
 							enemy.kill = true;
 							remove(ShootingHero.bullet);
 							ShootingHero.bullet.y = 1000000000000;
 							_enemyCounter++;
+						}
+						
+						if(bulletDistance < radius1 + radius2 && _hero.name == "heroGatling")
+						{
+							enemy.hurtDuration -= 8;
+							remove(ShootingHero.bullet);
+							ShootingHero.bullet.y = 1000000000000;
+							_enemyCounter++;
+						}
+						
+						if(bulletDistance < radius1 + radius2 && _hero.name == "heroPistol")
+						{
+							enemy.hurtDuration -= 4;
+							remove(ShootingHero.bullet);
+							ShootingHero.bullet.y = 1000000000000;
+							_enemyCounter++;
+						}
+						
+						if(bulletDistance < radius1 + radius2 && _hero.name == "heroRifle")
+						{
+							enemy.hurtDuration -= 6;
+							remove(ShootingHero.bullet);
+							ShootingHero.bullet.y = 1000000000000;
+							_enemyCounter++;
+						}
+						
+						if(enemy.hurtDuration <= 0)
+						{
+							enemy.kill = true;
 							spawnEnemy();
 						}
+						
 					}	
 				}
 				
@@ -489,6 +522,7 @@ package
 				{					
 					var enemy:OurEnemy = new OurEnemy("BadGuys", {x:-150, y:390, width:70, height:130, leftBound:10, rightBound:1560});
 					enemy.view = new AnimationSequence(_enemysTextureAtlas,["walk","idle"], "idle");
+					enemy.hurtDuration = 10;
 					_enemies.push(enemy);
 					add(enemy);
 				}
@@ -497,6 +531,7 @@ package
 				{					
 					var enemy2:OurEnemy = new OurEnemy("BadGuys", {x:1750, y:390, width:70, height:130, leftBound:10, rightBound:1560});
 					enemy2.view = new AnimationSequence(_enemysTextureAtlas,["walk","idle"], "idle");
+					enemy2.hurtDuration = 10;
 					_enemies.push(enemy2);
 					add(enemy2);
 				}
@@ -529,7 +564,8 @@ package
 			
 			_vampBoss = new OurEnemy("BadGuys", {x:1750, y:390, width:70, height:130, leftBound:10, rightBound:1560});
 			_vampBoss.view = new AnimationSequence(_enemysTextureAtlas,["walk","idle"], "idle");
-			_vampBoss.hurtDuration = 2000;
+			_vampBoss.speed = 4;
+			_vampBoss.hurtDuration = 300;
 			add(_vampBoss);
 			
 		}
