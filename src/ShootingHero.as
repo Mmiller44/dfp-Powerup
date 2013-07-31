@@ -25,7 +25,13 @@ package
 		public static var bulletShoot:Class;
 		public static var ShootSound:Sound = new bulletShoot() as Sound;
 		
-		public static var MachineGunShot:Sound = new bulletShoot() as Sound;
+//		[Embed(source="assets/sound/Machine_Gun.mp3")]
+//		public static var machinegunSound:Class;
+//		public static var Machine_Gun_Shot:Sound = new machinegunSound() as Sound;
+		
+		[Embed(source="assets/sound/Gatling.mp3")]
+		public static var gatlingSound:Class;
+		public static var Gatling:Sound = new gatlingSound() as Sound;
 		
 		[Embed(source="assets/sound/Sniper_Fire.mp3")]
 		public static var sniperGun:Class;
@@ -51,7 +57,8 @@ package
 		{
 			super(name, params);
 			
-			_ce.input.keyboard.addKeyAction("shoot", citrus.input.controllers.Keyboard.A);
+			_ce.input.keyboard.addKeyAction("shoot", citrus.input.controllers.Keyboard.ENTER);
+			_ce.input.keyboard.addKeyAction("jump", citrus.input.controllers.Keyboard.UP);
 			
 			//this.view = _bgs.heroArt;
 			this.hurtVelocityX = -10;
@@ -68,9 +75,9 @@ package
 			// The sound will need to be changed for a machine gun as well.
 			// Set a counter to reset the gun back to the pistol after X amounts of bullets (this will keep people playing and picking up the crates)
 			
-			if(event.keyCode == 65 && this.name == "heroRifle")
+			if(event.keyCode == 13 && this.name == "heroRifle")
 			{
-				ShootSound.play(0,0);
+				//Machine_Gun_Shot.play(0,0);
 								
 				if(_inverted)
 				{
@@ -98,9 +105,9 @@ package
 				}
 			}
 			
-			if(event.keyCode == 65 && this.name == "heroGatling")
+			if(event.keyCode == 13 && this.name == "heroGatling")
 			{
-				ShootSound.play(0,0);
+				Gatling.play(0,0);
 				
 				if(_inverted)
 				{
@@ -116,7 +123,7 @@ package
 				_gatlingBullets++
 				_ce.state.add(bullet);
 				
-				if(_gatlingBullets >= 20)
+				if(_gatlingBullets >= 100)
 				{
 					_gatlingBullets = 0;
 					this.name = "heroPistol";
