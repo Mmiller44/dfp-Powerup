@@ -4,9 +4,14 @@ package
 	import citrus.objects.platformer.box2d.Hero;
 	import citrus.objects.platformer.box2d.Missile;
 	import citrus.physics.PhysicsCollisionCategories;
+	import citrus.view.starlingview.AnimationSequence;
 	
+	import flash.display.Bitmap;
 	import flash.events.KeyboardEvent;
 	import flash.media.Sound;
+	
+	import starling.textures.Texture;
+	import starling.textures.TextureAtlas;
 		
 	public class ShootingHero extends Hero
 	{
@@ -26,7 +31,21 @@ package
 		public static var sniperGun:Class;
 		public static var SniperShot:Sound = new sniperGun() as Sound;
 		
+		[Embed(source="assets/spritesheets/hero_pistol.xml", mimeType="application/octet-stream")]
+		private var _heroPistolConfig:Class;
+		
+		[Embed(source="assets/spritesheets/hero_pistol.png")]
+		private var _heroPistolPng:Class;
+		
 		private var _bulletsLeft:Number = 10;
+		
+		private var _Herobitmap:Bitmap;
+		private var _Herotexture:Texture;
+		private var _Heroxml:XML;
+		private var _HerosTextureAtlas:TextureAtlas;
+		private var _rifleBullets:Number = 0;
+		private var _sniperBullets:Number = 0;
+		private var _gatlingBullets:Number = 0;
 
 		public function ShootingHero(name:String, params:Object=null)
 		{
@@ -52,7 +71,7 @@ package
 			if(event.keyCode == 65 && this.name == "heroRifle")
 			{
 				ShootSound.play(0,0);
-				
+								
 				if(_inverted)
 				{
 					bullet = new Missile("bullet"+bulletcounter, {x:x - width, y:this.y + 10, width:5, height:48, speed:500, angle:180});
@@ -64,13 +83,18 @@ package
 					bullet.view = new bulletEMBD();
 				}
 				
-				_bulletsLeft--;
+				_rifleBullets++;
 				_ce.state.add(bullet);
 				
-				if(_bulletsLeft <= 0)
+				if(_rifleBullets >= 10)
 				{
-					// Hero needs to have the machine gun removed
-					trace("remove machine gun");
+					_rifleBullets = 0;
+					this.name = "heroPistol";
+					_Herobitmap = new _heroPistolPng();
+					_Herotexture = Texture.fromBitmap(_Herobitmap);
+					_Heroxml= XML(new _heroPistolConfig());
+					_HerosTextureAtlas = new TextureAtlas(_Herotexture, _Heroxml);
+					this.view = new AnimationSequence(_HerosTextureAtlas,["walk", "duck", "idle", "jump", "hurt"], "idle");
 				}
 			}
 			
@@ -89,13 +113,19 @@ package
 					bullet.view = new bulletEMBD();
 				}
 				
-				_bulletsLeft--;
+				_gatlingBullets++
 				_ce.state.add(bullet);
 				
-				if(_bulletsLeft <= 0)
+				if(_gatlingBullets >= 20)
 				{
+					_gatlingBullets = 0;
+					this.name = "heroPistol";
+					_Herobitmap = new _heroPistolPng();
+					_Herotexture = Texture.fromBitmap(_Herobitmap);
+					_Heroxml= XML(new _heroPistolConfig());
+					_HerosTextureAtlas = new TextureAtlas(_Herotexture, _Heroxml);
 					// Hero needs to have the machine gun removed
-					trace("remove machine gun");
+					this.view = new AnimationSequence(_HerosTextureAtlas,["walk", "duck", "idle", "jump", "hurt"], "idle");
 				}
 			}
 		}
@@ -105,14 +135,9 @@ package
 		{
 			super.update(timeDelta);
 			
-			if(this.name == "sword")
+			if(_ce.input.justDid("shoot") && this.name == "gameOver")
 			{
-				_ce.input.keyboard.addKeyAction("slash", citrus.input.controllers.Keyboard.A);
-			}
-			
-			if((_ce.input.justDid("slash") && this.name == "sword"))
-			{
-				trace("hello");
+				
 			}
 			
 			if(bullet)
@@ -121,7 +146,6 @@ package
 				{
 					bullet.destroy();
 				}
-				
 			}
 
 			if(_ce.input.justDid("shoot") && this.name == "heroPistol")
@@ -159,13 +183,19 @@ package
 					bullet.view = new bulletEMBD();
 				}
 				
-				bulletcounter++;
+				_sniperBullets++;
 				_ce.state.add(bullet);
-			}
-			
-			if(_ce.input.justDid("shoot") && this.name == "heroSword")
-			{
-				// input slash noise and effect
+				
+				if(_sniperBullets >= 5)
+				{
+					_sniperBullets = 0;
+					this.name = "heroPistol";
+					_Herobitmap = new _heroPistolPng();
+					_Herotexture = Texture.fromBitmap(_Herobitmap);
+					_Heroxml= XML(new _heroPistolConfig());
+					_HerosTextureAtlas = new TextureAtlas(_Herotexture, _Heroxml);
+					this.view = new AnimationSequence(_HerosTextureAtlas,["walk", "duck", "idle", "jump", "hurt"], "idle");
+				}
 			}
 
 			updateAnimation();

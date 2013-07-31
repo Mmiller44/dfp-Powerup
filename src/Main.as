@@ -2,6 +2,7 @@ package
 {
 	import citrus.core.CitrusEngine;
 	import citrus.core.starling.StarlingCitrusEngine;
+	import citrus.objects.CitrusSprite;
 	
 	import flash.events.GameInputEvent;
 	import flash.ui.GameInput;
@@ -9,6 +10,10 @@ package
 	
 	import io.arkeus.ouya.ControllerInput;
 	import io.arkeus.ouya.controller.OuyaController;
+	
+	import starling.display.Image;
+	import starling.events.Event;
+	import starling.events.KeyboardEvent;
 	
 	[SWF (frameRate="60", backgroundColor="#ffffff")]
 	public class Main extends StarlingCitrusEngine
@@ -19,8 +24,9 @@ package
 			
 			setUpStarling();
 			
-			state = new GameState();					
+			state = new GameState();
 		}
+		
 
 	}
 }

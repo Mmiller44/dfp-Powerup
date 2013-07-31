@@ -1,6 +1,9 @@
 package
 {
 	import citrus.core.starling.StarlingState;
+	import citrus.input.Input;
+	import citrus.input.InputController;
+	import citrus.input.controllers.Keyboard;
 	import citrus.objects.CitrusSprite;
 	import citrus.objects.platformer.box2d.Enemy;
 	import citrus.objects.platformer.box2d.Platform;
@@ -13,6 +16,7 @@ package
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 	import flash.media.Sound;
+	import flash.utils.setTimeout;
 	
 	import starling.animation.DelayedCall;
 	import starling.core.Starling;
@@ -22,13 +26,7 @@ package
 	import starling.textures.TextureAtlas;
 	
 	public class GameState extends StarlingState
-	{
-		[Embed(source="assets/spritesheets/hero_sword.xml", mimeType="application/octet-stream")]
-		private var _heroConfig:Class;
-		
-		[Embed(source="assets/spritesheets/hero_sword.png")]
-		private var _heroPng:Class;
-		
+	{	
 		[Embed(source="assets/spritesheets/werewolf.xml", mimeType="application/octet-stream")]
 		private var _werewolfConfig:Class;
 		
@@ -110,6 +108,12 @@ package
 		[Embed(source="assets/images/HUD.png")]
 		public var HealthBar:Class;
 		
+		[Embed(source="assets/images/startscreen.jpg")]
+		public var startScreen:Class;
+		
+		[Embed(source="assets/images/endscreen.jpg")]
+		public var endScreen:Class;
+		
 		[Embed(source="assets/sound/Ammo.mp3")]
 		public static const SND_AMMO:Class;
 		
@@ -146,7 +150,7 @@ package
 		private var _healthFill:Platform;
 		private var _bossSpawn:Boolean = false;
 		private var _main:Main;
-
+		
 		public static var _vampBoss:OurEnemy;
 		
 		public function GameState()
@@ -160,11 +164,22 @@ package
 			
 			super.initialize();
 			
+			var startScreen:CitrusSprite = new CitrusSprite("startScreen", {view:Image.fromBitmap(new startScreen())});
+			startScreen.x = 0;
+			startScreen.y = 0;
+			add(startScreen);
+			
+			setTimeout(onStart, 10000);
+			startScreen.destroy();
+		}
+		
+		private function onStart():void
+		{
 			this.addEventListener(Event.ENTER_FRAME, onUpdate);
 			
-			_Herobitmap = new _heroPng();
+			_Herobitmap = new _heroPistolPng();
 			_Herotexture = Texture.fromBitmap(_Herobitmap);
-			_Heroxml= XML(new _heroConfig());
+			_Heroxml= XML(new _heroPistolConfig());
 			_HerosTextureAtlas = new TextureAtlas(_Herotexture, _Heroxml);
 			
 			_enemybitmap = new _werewolfPng();
@@ -176,7 +191,7 @@ package
 			physics.view = null;
 			//physics.visible = true;
 			add(physics);
-
+			
 			var background:CitrusSprite = new CitrusSprite("background", {view:Image.fromBitmap(new BackgroundPic())});
 			background.x = 0;
 			background.y = -270;
@@ -199,7 +214,7 @@ package
 			
 			
 			_healthFill = new Platform("healthbar", {x:260, y:-200, width:200, height:20});
-			_healthFill.view = new Quad(250,25,0xff0000);
+			_healthFill.view = new Quad(250,25,0xaa5555);
 			add(_healthFill);
 			
 			_hud = new CitrusSprite("hud", {view:Image.fromBitmap(new HealthBar())});
@@ -208,8 +223,8 @@ package
 			add(_hud);
 			
 			_hero = new ShootingHero("hero", {x:stage.stageWidth/2, y:150, width:70, height:125});
-			_hero.view = new AnimationSequence(_HerosTextureAtlas,["walk", "duck", "slash", "idle", "jump", "hurt"], "idle");
-			_hero.name = "sword";
+			_hero.view = new AnimationSequence(_HerosTextureAtlas,["walk", "duck", "idle", "jump", "hurt"], "idle");
+			_hero.name = "heroPistol";
 			add(_hero);
 			
 			view.camera.setUp(_hero, new Point(stage.stageWidth / 2, stage.stageHeight / 2), new Rectangle(0, 0, 1550, 450), new Point(.25, .05));
@@ -234,7 +249,6 @@ package
 			_delayedCall = new DelayedCall(crateSpawnTimer, 10.0);
 			_delayedCall.repeatCount = 0;
 			Starling.juggler.add(_delayedCall);
-		
 		}
 		
 		protected function crateSpawnTimer():void
@@ -288,7 +302,7 @@ package
 		private function onUpdate():void
 		{	
 			grabCrate();
-						
+			
 			if(_hero.x <= 30)
 			{
 				_hero.x = 30;
@@ -313,31 +327,31 @@ package
 			
 			if(_hero.hurtDuration < 800)
 			{
-				_healthFill.view = new Quad(200,25,0xff0000);
+				_healthFill.view = new Quad(200,25,0xaa5555);
 				_healthFill.x = _hud.x - 10 + _healthFill.width;
 			}
 			
 			if(_hero.hurtDuration < 600)
 			{
-				_healthFill.view = new Quad(150,25,0xff0000);
+				_healthFill.view = new Quad(150,25,0xaa5555);
 				_healthFill.x = _hud.x - 50 + _healthFill.width;
 			}
 			
 			if(_hero.hurtDuration < 400)
 			{
-				_healthFill.view = new Quad(100,25,0xff0000);
+				_healthFill.view = new Quad(100,25,0xaa5555);
 				_healthFill.x = _hud.x - 80 + _healthFill.width;
 			}
 			
 			if(_hero.hurtDuration < 200)
 			{
-				_healthFill.view = new Quad(50,25,0xff0000);
+				_healthFill.view = new Quad(50,25,0xaa5555);
 				_healthFill.x = _hud.x - 120 + _healthFill.width;
 			}
 			
 			if(_hero.hurtDuration <= 0)
 			{
-				_healthFill.view = new Quad(0,25,0xff0000);
+				_healthFill.view = new Quad(0,25,0xaa5555);
 				_healthFill.x = _hud.x - 120 + _healthFill.width;
 			}
 			
@@ -369,13 +383,13 @@ package
 						}
 					}
 					
-//					if(distance < radius1 + radius2 && _ce.input.keyboard.addKeyAction("shoot", citrus.input.controllers.Keyboard.DOWN))
-//					{						
-//						enemy.kill = true;
-//						_enemyCounter++;
-//						spawnEnemy();
-//					}
-//					
+					//					if(distance < radius1 + radius2 && _ce.input.keyboard.addKeyAction("shoot", citrus.input.controllers.Keyboard.DOWN))
+					//					{						
+					//						enemy.kill = true;
+					//						_enemyCounter++;
+					//						spawnEnemy();
+					//					}
+					//					
 					if(ShootingHero.bullet)
 					{
 						var p3:Point = new Point(ShootingHero.bullet.x, ShootingHero.bullet.y);
@@ -425,24 +439,45 @@ package
 						// Go to the game over screen here.
 					}
 				}
-									
-					if(!_vampBoss.kill && bulletDistance <= radius1)
-					{
-						remove(ShootingHero.bullet);
-						_vampBoss.hurtDuration -= 2;
-					}
 				
-				if(_vampBoss.hurtDuration <= 0)
+				if(!_vampBoss.kill && bulletDistance <= radius1)
 				{
-					_vampBoss.kill = true;
+					remove(ShootingHero.bullet);
+					_vampBoss.hurtDuration -= 2;
+					
 					
 					if(_vampBoss.hurtDuration <= 0)
 					{
+						_vampBoss.kill = true;
+						
+						if(_vampBoss.hurtDuration <= 0)
+						{
+							// PUT END SCREEN FUNCTION HERE.
+							var endScreen:CitrusSprite = new CitrusSprite("endScreen", {view:Image.fromBitmap(new endScreen())});
+							endScreen.x = 0;
+							endScreen.y = -320;
+							
+							_hero.x = 10;
+							_hero.name = "gameOver";
 
+							this.killAllObjects();
+							_delayedCall.reset(crateSpawnTimer, 100000000);
+
+							add(endScreen);
+							
+							setTimeout(onRestart, 10000);
+					
+							// POSSIBLE SPOT TO CALL SECOND LEVEL.
+						}
 					}
 				}
 			}
 			
+		}
+		
+		private function onRestart():void
+		{			
+			initialize();
 		}
 		
 		private function spawnEnemy():void
@@ -470,7 +505,7 @@ package
 				{
 					_spawning = false;
 				}
-	
+				
 			}
 			
 			trace(_enemies.length);
@@ -494,7 +529,7 @@ package
 			
 			_vampBoss = new OurEnemy("BadGuys", {x:1750, y:390, width:70, height:130, leftBound:10, rightBound:1560});
 			_vampBoss.view = new AnimationSequence(_enemysTextureAtlas,["walk","idle"], "idle");
-			_vampBoss.hurtDuration = 100;
+			_vampBoss.hurtDuration = 2000;
 			add(_vampBoss);
 			
 		}
@@ -522,12 +557,12 @@ package
 					_HerosTextureAtlas = new TextureAtlas(_Herotexture, _Heroxml);
 					_hero.view = new AnimationSequence(_HerosTextureAtlas,["walk", "duck", "idle", "jump", "hurt"], "idle");
 					_hero.name = "heroPistol";
-
+					
 					remove(_crate);
 					_ce.stage.removeEventListener(KeyboardEvent.KEY_DOWN, _hero.onKeyDown);
 					
 				}
-												
+				
 				if(_crate.name == "machineGun")
 				{
 					// Play sound effect
@@ -539,7 +574,7 @@ package
 					_HerosTextureAtlas = new TextureAtlas(_Herotexture, _Heroxml);
 					_hero.view = new AnimationSequence(_HerosTextureAtlas,["walk", "duck", "idle", "jump", "hurt"], "idle");
 					_hero.name = "heroRifle";
-
+					
 					// This is calling the function to shoot as a machine gun. Which is in the ShootingHero class
 					_ce.stage.addEventListener(KeyboardEvent.KEY_DOWN, _hero.onKeyDown);
 					
@@ -559,7 +594,7 @@ package
 					_HerosTextureAtlas = new TextureAtlas(_Herotexture, _Heroxml);
 					_hero.view = new AnimationSequence(_HerosTextureAtlas,["walk", "duck", "idle", "jump", "hurt"], "idle");
 					_hero.name = "heroSniper";
-
+					
 					// Remove the crate from the screen.
 					remove(_crate);
 				}
@@ -598,7 +633,7 @@ package
 					if(_hero.hurtDuration >= 1000)
 					{
 						_hero.hurtDuration == 1000;
-						_healthFill.view = new Quad(250,25,0xff0000);
+						_healthFill.view = new Quad(250,25,0xaa5555);
 						_healthFill.x = _hud.x + 15 + _healthFill.width;
 						onUpdate();
 					}
