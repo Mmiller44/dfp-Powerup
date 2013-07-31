@@ -5,11 +5,9 @@ package
 	import citrus.objects.platformer.box2d.Missile;
 	import citrus.physics.PhysicsCollisionCategories;
 	import citrus.view.starlingview.AnimationSequence;
-	
 	import flash.display.Bitmap;
 	import flash.events.KeyboardEvent;
 	import flash.media.Sound;
-	
 	import starling.textures.Texture;
 	import starling.textures.TextureAtlas;
 		
@@ -33,7 +31,7 @@ package
 		public static var gatlingSound:Class;
 		public static var Gatling:Sound = new gatlingSound() as Sound;
 		
-		[Embed(source="assets/sound/Sniper_Fire.mp3")]
+		[Embed(source="assets/sound/Sniper.mp3")]
 		public static var sniperGun:Class;
 		public static var SniperShot:Sound = new sniperGun() as Sound;
 		
@@ -42,8 +40,6 @@ package
 		
 		[Embed(source="assets/spritesheets/hero_pistol.png")]
 		private var _heroPistolPng:Class;
-		
-		private var _bulletsLeft:Number = 10;
 		
 		private var _Herobitmap:Bitmap;
 		private var _Herotexture:Texture;
