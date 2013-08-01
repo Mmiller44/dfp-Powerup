@@ -5,9 +5,11 @@ package
 	import citrus.objects.platformer.box2d.Missile;
 	import citrus.physics.PhysicsCollisionCategories;
 	import citrus.view.starlingview.AnimationSequence;
+	
 	import flash.display.Bitmap;
 	import flash.events.KeyboardEvent;
 	import flash.media.Sound;
+	
 	import starling.textures.Texture;
 	import starling.textures.TextureAtlas;
 		
@@ -56,7 +58,6 @@ package
 			_ce.input.keyboard.addKeyAction("shoot", citrus.input.controllers.Keyboard.ENTER);
 			_ce.input.keyboard.addKeyAction("jump", citrus.input.controllers.Keyboard.UP);
 			
-			//this.view = _bgs.heroArt;
 			this.hurtVelocityX = -10;
 			this.hurtVelocityY = -10;
 			this.killVelocity = 80000;
@@ -138,9 +139,16 @@ package
 		{
 			super.update(timeDelta);
 			
+			var gs:GameState = new GameState;
+			
 			if(_ce.input.justDid("shoot") && this.name == "gameOver")
 			{
-				
+				gs.onRestart();
+			}
+			
+			if(_ce.input.justDid("shoot") && this.name == "nextLevel")
+			{
+				gs.onNextLevel();
 			}
 			
 			if(bullet)
@@ -172,7 +180,6 @@ package
 			
 			if(_ce.input.justDid("shoot") && this.name == "heroSniper")
 			{
-				// Input sniper sound
 				SniperShot.play(0,0);
 				
 				if(_inverted)

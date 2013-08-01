@@ -2,9 +2,6 @@ package
 {
 	import citrus.core.CitrusEngine;
 	import citrus.core.starling.StarlingState;
-	import citrus.input.Input;
-	import citrus.input.InputController;
-	import citrus.input.controllers.Keyboard;
 	import citrus.objects.CitrusSprite;
 	import citrus.objects.platformer.box2d.Enemy;
 	import citrus.objects.platformer.box2d.Platform;
@@ -18,7 +15,6 @@ package
 	import flash.geom.Rectangle;
 	import flash.media.Sound;
 	import flash.media.SoundTransform;
-	import flash.utils.Endian;
 	import flash.utils.setTimeout;
 	
 	import starling.animation.DelayedCall;
@@ -42,7 +38,7 @@ package
 		[Embed(source="assets/spritesheets/vampire_boss.png")]
 		private var _vampireBossPng:Class;
 		
-		[Embed(source="assets/images/werewolf_boss_hud.png")]
+		[Embed(source="assets/images/vampire_boss_hud.png")]
 		private var _vampireBossHealth:Class;
 		
 		[Embed(source="assets/spritesheets/hero_sniper.xml", mimeType="application/octet-stream")]
@@ -93,6 +89,12 @@ package
 		[Embed(source="assets/images/startscreen.jpg")]
 		public var startScreen:Class;
 		
+		[Embed(source="assets/images/loadscreen.jpg")]
+		public var loadScreen:Class;
+		
+		[Embed(source="assets/images/winscreen.jpg")]
+		public var winScreen:Class;
+		
 		[Embed(source="assets/images/endscreen.jpg")]
 		public var endScreen:Class;
 		
@@ -102,7 +104,7 @@ package
 		[Embed(source="assets/sound/Splat.mp3")]
 		public static const Bite:Class;
 		
-		[Embed(source="assets/sound/Kill_Streak.mp3")]
+		[Embed(source="assets/sound/werewolfBossGrowl.mp3")]
 		public static const Boss:Class;
 		
 		[Embed(source="assets/sound/Health.mp3")]
@@ -110,6 +112,9 @@ package
 		
 		[Embed(source="assets/sound/Satiate Strings.mp3")]
 		public static const MusicSong:Class;
+		
+		[Embed(source="assets/sound/Heartbeat.mp3")]
+		public static const heartbeat:Class;
 		
 		private var _hero:ShootingHero;
 		private var _enemies:Array = [];
@@ -119,6 +124,7 @@ package
 		private var _enemyCounter:Number = 0;
 		public static var sndAmmo:Sound = new SND_AMMO() as Sound;
 		public static var BossSpeech:Sound = new Boss() as Sound;
+		public static var heartbeating:Sound = new heartbeat() as Sound;
 		public static var HealthSound:Sound = new Health as Sound;
 		public static var Music:Sound = new MusicSong as Sound;
 		private var _Herobitmap:Bitmap;
@@ -135,12 +141,12 @@ package
 		private var _bossHealthFill:Platform;
 		private var _healthFill:Platform;
 		private var _bossSpawn:Boolean = false;
-		private var _vampBoss:OurEnemy;
+		private var _wolfBoss:OurEnemy;
+		private var _heroHurt:Boolean = true;
 		
 		public function LevelTwoState()
 		{
 			super();
-			
 		}
 		
 		override public function initialize():void
@@ -151,7 +157,7 @@ package
 			var soundTrans:SoundTransform = new SoundTransform(1)
 			Music.play(0,3,soundTrans);
 			
-			setTimeout(onStart, 10);
+			onStart();
 		}
 		
 		private function onStart():void
@@ -313,6 +319,7 @@ package
 			{
 				_healthFill.view = new Quad(200,25,0xaa5555);
 				_healthFill.x = _hud.x - 10 + _healthFill.width;
+				
 			}
 			
 			if(_hero.hurtDuration <= 600)
@@ -331,6 +338,12 @@ package
 			{
 				_healthFill.view = new Quad(50,25,0xaa5555);
 				_healthFill.x = _hud.x - 120 + _healthFill.width;
+				
+				if(_heroHurt)
+				{
+					heartbeating.play(0,0);
+					_heroHurt = false;
+				}
 			}
 			
 			for each (var enemy:Enemy in _enemies) 
@@ -346,23 +359,6 @@ package
 					if(distance < radius1 + radius2)
 					{						
 						_hero.hurtDuration -= 4;
-						
-						if(_hero.hurtDuration <= 0)
-						{					
-							this.killAllObjects();
-							
-							var endScreen2:CitrusSprite = new CitrusSprite("endScreen", {view:Image.fromBitmap(new endScreen())});
-							endScreen2.x = 0;
-							endScreen2.y = -320;
-							_hero.x = 10;
-							_hero.name = "gameOver";
-							
-							_delayedCall.reset(crateSpawnTimer, 100000000);
-							
-							add(endScreen2);
-							
-							setTimeout(onRestart, 10000);
-						}
 					}
 					
 					if(ShootingHero.bullet)
@@ -426,7 +422,6 @@ package
 								spawnEnemy();
 							}
 						}
-						
 					}	
 				}
 				
@@ -439,11 +434,11 @@ package
 			if(_bossSpawn)
 			{
 				var p8:Point = new Point(_hero.x, _hero.y);
-				var p9:Point = new Point(_vampBoss.x, _vampBoss.y);
+				var p9:Point = new Point(_wolfBoss.x, _wolfBoss.y);
 				var p10:Point = new Point(ShootingHero.bullet.x,ShootingHero.bullet.y);
 				var bulletDistance2:Number = Point.distance(p9,p10);
 				var distance2:Number = Point.distance(p8, p9);
-				var radius:Number = _vampBoss.width;
+				var radius:Number = _wolfBoss.width;
 				
 				if(_hero.x > 610)
 				{
@@ -457,55 +452,35 @@ package
 				
 				_bossHealthFill.x = _bossHud.x - 70 + _bossHealthFill.width;
 				
-				if(!_vampBoss.kill)
+				if(!_wolfBoss.kill)
 				{
 					if(distance2 < radius)
 					{
 						_hero.hurtDuration -= 5;
 					}
-					
-					if(_hero.hurtDuration <= 0)
-					{						
-						
-						_hero.kill = true;
-						
-						this.killAllObjects();
-						_delayedCall.reset(crateSpawnTimer, 100000000);
-						
-						var endScreen3:CitrusSprite = new CitrusSprite("endScreen2", {view:Image.fromBitmap(new endScreen())});
-						endScreen3.x = 0;
-						endScreen3.y = -320;
-						_hero.x = 10;
-						_hero.name = "gameOver";
-						
-						add(endScreen3);
-						
-						setTimeout(onRestart, 10000);
-					}
-					
 				}
 				
-				if(!_vampBoss.kill)
+				if(!_wolfBoss.kill)
 				{
-					if(_vampBoss.hurtDuration <= 500)
+					if(_wolfBoss.hurtDuration <= 500)
 					{
 						_bossHealthFill.view = new Quad(225,25,0xaa5555);
 						_bossHealthFill.x = _bossHud.x + _bossHealthFill.width;
 					}
 					
-					if(_vampBoss.hurtDuration <= 400)
+					if(_wolfBoss.hurtDuration <= 400)
 					{
 						_bossHealthFill.view = new Quad(200,25,0xaa5555);
 						_bossHealthFill.x = _bossHud.x + _bossHealthFill.width;
 					}
 					
-					if(_vampBoss.hurtDuration <= 300)
+					if(_wolfBoss.hurtDuration <= 300)
 					{
 						_bossHealthFill.view = new Quad(150,25,0xaa5555);
 						_bossHealthFill.x = _bossHud.x + _bossHealthFill.width;
 					}
 					
-					if(_vampBoss.hurtDuration <= 200)
+					if(_wolfBoss.hurtDuration <= 200)
 					{
 						_bossHealthFill.view = new Quad(50,25,0xaa5555);
 						_bossHealthFill.x = _bossHud.x + 50 + _bossHealthFill.width;
@@ -514,17 +489,17 @@ package
 				
 				if(ShootingHero.bullet)
 				{
-					if(!_vampBoss.kill && bulletDistance2 < radius)
+					if(!_wolfBoss.kill && bulletDistance2 < radius)
 					{
 						remove(ShootingHero.bullet);
-						_vampBoss.hurtDuration -= 2;
+						_wolfBoss.hurtDuration -= 2;
 						ShootingHero.bullet.y = 1000000000000;
 						
-						if(_vampBoss.hurtDuration <= 0)
+						if(_wolfBoss.hurtDuration <= 0)
 						{
-							_vampBoss.kill = true;
+							_wolfBoss.kill = true;
 							
-							if(_vampBoss.hurtDuration <= 0)
+							if(_wolfBoss.hurtDuration <= 0)
 							{	
 								_hero.x = 10;
 								_hero.name = "gameOver";
@@ -532,34 +507,48 @@ package
 								this.killAllObjects();
 								_delayedCall.reset(crateSpawnTimer, 100000000);
 								
-								var endScreen:CitrusSprite = new CitrusSprite("endScreen2", {view:Image.fromBitmap(new endScreen())});
-								endScreen.x = 0;
-								endScreen.y = -320;
-								add(endScreen);
+								_hero = new ShootingHero("hero", {x:stage.stageWidth/2, y:150, width:70, height:125});
+								_hero.name = "nextLevel";
+								add(_hero);
 								
-								setTimeout(onRestart, 10000);
-								
-								// POSSIBLE SPOT TO CALL SECOND LEVEL.
+								var youWin:CitrusSprite = new CitrusSprite("youWin", {view:Image.fromBitmap(new winScreen())});
+								youWin.x = 0;
+								youWin.y = -320;
+								add(youWin);
 							}
 						}
 					}
 				}
 			}
 			
+			if(_hero.hurtDuration <= 0)
+			{
+				_hero.x = 10;
+				_hero.name = "gameOver";
+				this.killAllObjects();
+				
+				_delayedCall.reset(crateSpawnTimer, 100000000);
+				
+				_hero = new ShootingHero("hero", {x:stage.stageWidth/2, y:150, width:70, height:125});
+				_hero.name = "gameOver";
+				add(_hero);
+				
+				var endScreen2:CitrusSprite = new CitrusSprite("endScreen", {view:Image.fromBitmap(new endScreen())});
+				endScreen2.x = 0;
+				endScreen2.y = -320;
+				add(endScreen2);
+			}
 		}
 		
-		private function onRestart():void
-		{	
-			//initialize();
-			
-			CitrusEngine.getInstance().state = new LevelTwoState;
+		public function onRestart():void
+		{
+			CitrusEngine.getInstance().state = new GameState;
 		}
 		
 		private function spawnEnemy():void
 		{
 			if(_spawning)
 			{
-				
 				for(var i:uint= 0; i < 1; i++)
 				{					
 					var enemy:OurEnemy = new OurEnemy("BadGuys", {x:Math.random() * -200 - 50, y:390, width:70, height:130, leftBound:10, rightBound:1560});
@@ -604,11 +593,11 @@ package
 			_enemyxml= XML(new _vampireBossConfig());
 			_enemysTextureAtlas = new TextureAtlas(_enemytexture, _enemyxml);
 			
-			_vampBoss = new OurEnemy("BadGuys", {x:1750, y:390, width:70, height:130, leftBound:10, rightBound:1560});
-			_vampBoss.view = new AnimationSequence(_enemysTextureAtlas,["walk","idle"], "idle");
-			_vampBoss.speed = 8;
-			_vampBoss.hurtDuration = 10;
-			add(_vampBoss);
+			_wolfBoss = new OurEnemy("BadGuys", {x:1750, y:390, width:70, height:130, leftBound:10, rightBound:1560});
+			_wolfBoss.view = new AnimationSequence(_enemysTextureAtlas,["walk","idle"], "idle");
+			_wolfBoss.speed = 8;
+			_wolfBoss.hurtDuration = 10;
+			add(_wolfBoss);
 			
 			_bossHealthFill = new Platform("bosshealthbar", {x:900, y:-200, width:200, height:20});
 			_bossHealthFill.view = new Quad(250,25,0xaa5555);
@@ -618,7 +607,6 @@ package
 			_bossHud.x = 900;
 			_bossHud.y = -250;
 			add(_bossHud);
-			
 		}
 		
 		private function grabCrate():void

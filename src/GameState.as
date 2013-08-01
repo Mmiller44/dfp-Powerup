@@ -2,9 +2,6 @@ package
 {
 	import citrus.core.CitrusEngine;
 	import citrus.core.starling.StarlingState;
-	import citrus.input.Input;
-	import citrus.input.InputController;
-	import citrus.input.controllers.Keyboard;
 	import citrus.objects.CitrusSprite;
 	import citrus.objects.platformer.box2d.Enemy;
 	import citrus.objects.platformer.box2d.Platform;
@@ -18,7 +15,6 @@ package
 	import flash.geom.Rectangle;
 	import flash.media.Sound;
 	import flash.media.SoundTransform;
-	import flash.utils.Endian;
 	import flash.utils.setTimeout;
 	
 	import starling.animation.DelayedCall;
@@ -87,14 +83,14 @@ package
 		[Embed(source="assets/images/crate_gatling.jpg")]
 		public var gatlingCrate:Class;
 		
-		[Embed(source="assets/images/vampire_Boss.png")]
-		public var vampireBoss:Class;
-		
 		[Embed(source="assets/images/HUD.png")]
 		public var HealthBar:Class;
 		
 		[Embed(source="assets/images/startscreen.jpg")]
 		public var startScreen:Class;
+		
+		[Embed(source="assets/images/loadscreen.jpg")]
+		public var loadScreen:Class;
 		
 		[Embed(source="assets/images/endscreen.jpg")]
 		public var endScreen:Class;
@@ -148,7 +144,6 @@ package
 		public function GameState()
 		{
 			super();
-			
 		}
 		
 		override public function initialize():void
@@ -327,10 +322,6 @@ package
 				_healthFill.view = new Quad(200,25,0xaa5555);
 				_healthFill.x = _hud.x - 10 + _healthFill.width;
 				
-				if(heartbeating)
-				{
-					
-				}
 			}
 			
 			if(_hero.hurtDuration <= 600)
@@ -352,7 +343,7 @@ package
 				
 				if(_heroHurt)
 				{
-					herosHurt();
+					heartbeating.play(0,0);
 					_heroHurt = false;
 				}
 			}
@@ -370,23 +361,6 @@ package
 					if(distance < radius1 + radius2)
 					{						
 						_hero.hurtDuration -= 4;
-					
-						if(_hero.hurtDuration <= 0)
-						{					
-							this.killAllObjects();
-							
-							var endScreen2:CitrusSprite = new CitrusSprite("endScreen", {view:Image.fromBitmap(new endScreen())});
-							endScreen2.x = 0;
-							endScreen2.y = -320;
-							_hero.x = 10;
-							_hero.name = "gameOver";
-							
-							_delayedCall.reset(crateSpawnTimer, 100000000);
-							
-							add(endScreen2);
-							
-							setTimeout(onRestart, 10000);
-						}
 					}
 									
 					if(ShootingHero.bullet)
@@ -487,26 +461,6 @@ package
 					{
 						_hero.hurtDuration -= 5;
 					}
-					
-					if(_hero.hurtDuration <= 0)
-					{						
-						
-						_hero.kill = true;
-						
-						this.killAllObjects();
-						_delayedCall.reset(crateSpawnTimer, 100000000);
-						
-						var endScreen3:CitrusSprite = new CitrusSprite("endScreen2", {view:Image.fromBitmap(new endScreen())});
-						endScreen3.x = 0;
-						endScreen3.y = -320;
-						_hero.x = 10;
-						_hero.name = "gameOver";
-						
-						add(endScreen3);
-						
-						setTimeout(onRestart, 10000);
-					}
-					
 				}
 				
 				if(!_wolfBoss.kill)
@@ -556,27 +510,45 @@ package
 								this.killAllObjects();
 								_delayedCall.reset(crateSpawnTimer, 100000000);
 								
-								var endScreen:CitrusSprite = new CitrusSprite("endScreen2", {view:Image.fromBitmap(new endScreen())});
-								endScreen.x = 0;
-								endScreen.y = -320;
-								add(endScreen);
+								_hero = new ShootingHero("hero", {x:stage.stageWidth/2, y:150, width:70, height:125});
+								_hero.name = "nextLevel";
+								add(_hero);
 								
-								setTimeout(onRestart, 10000);
-								
+								var nextLevel:CitrusSprite = new CitrusSprite("endScreen", {view:Image.fromBitmap(new loadScreen())});
+								nextLevel.x = 0;
+								nextLevel.y = -320;
+								add(nextLevel);
 							}
 						}
 					}
 				}
 			}
 			
+			if(_hero.hurtDuration <= 0)
+			{
+				_hero.x = 10;
+				_hero.name = "gameOver";
+				this.killAllObjects();
+				
+				_delayedCall.reset(crateSpawnTimer, 100000000);
+				
+				_hero = new ShootingHero("hero", {x:stage.stageWidth/2, y:150, width:70, height:125});
+				_hero.name = "gameOver";
+				add(_hero);
+				
+				var endScreen2:CitrusSprite = new CitrusSprite("endScreen", {view:Image.fromBitmap(new endScreen())});
+				endScreen2.x = 0;
+				endScreen2.y = -320;
+				add(endScreen2);
+			}
 		}
 		
-		private function herosHurt():void
-		{			
-			heartbeating.play(0,0);
+		public function onRestart():void
+		{
+			CitrusEngine.getInstance().state = new GameState;
 		}
 		
-		private function onRestart():void
+		public function onNextLevel():void
 		{				
 			CitrusEngine.getInstance().state = new LevelTwoState;
 		}
@@ -585,7 +557,6 @@ package
 		{
 			if(_spawning)
 			{
-				
 				for(var i:uint= 0; i < 1; i++)
 				{					
 					var enemy:OurEnemy = new OurEnemy("BadGuys", {x:Math.random() * -200 - 50, y:390, width:70, height:130, leftBound:10, rightBound:1560});
@@ -644,7 +615,6 @@ package
 			_bossHud.x = 900;
 			_bossHud.y = -250;
 			add(_bossHud);
-			
 		}
 		
 		private function grabCrate():void
