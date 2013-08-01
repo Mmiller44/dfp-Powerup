@@ -25,10 +25,6 @@ package
 		public static var bulletShoot:Class;
 		public static var ShootSound:Sound = new bulletShoot() as Sound;
 		
-//		[Embed(source="assets/sound/Machine_Gun.mp3")]
-//		public static var machinegunSound:Class;
-//		public static var Machine_Gun_Shot:Sound = new machinegunSound() as Sound;
-		
 		[Embed(source="assets/sound/Gatling.mp3")]
 		public static var gatlingSound:Class;
 		public static var Gatling:Sound = new gatlingSound() as Sound;
@@ -141,12 +137,12 @@ package
 			
 			var gs:GameState = new GameState;
 			
-			if(_ce.input.justDid("shoot") && this.name == "gameOver")
+			if(_ce.input.justDid("jump") && this.name == "gameOver")
 			{
 				gs.onRestart();
 			}
 			
-			if(_ce.input.justDid("shoot") && this.name == "nextLevel")
+			if(_ce.input.justDid("jump") && this.name == "nextLevel")
 			{
 				gs.onNextLevel();
 			}

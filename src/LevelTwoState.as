@@ -85,9 +85,9 @@ package
 		
 		[Embed(source="assets/images/HUD.png")]
 		public var HealthBar:Class;
-		
-		[Embed(source="assets/images/startscreen.jpg")]
-		public var startScreen:Class;
+//		
+//		[Embed(source="assets/images/startscreen.jpg")]
+//		public var startScreen:Class;
 		
 		[Embed(source="assets/images/loadscreen.jpg")]
 		public var loadScreen:Class;
@@ -95,7 +95,7 @@ package
 		[Embed(source="assets/images/winscreen.jpg")]
 		public var winScreen:Class;
 		
-		[Embed(source="assets/images/endscreen.jpg")]
+		[Embed(source="assets/images/losescreen.jpg")]
 		public var endScreen:Class;
 		
 		[Embed(source="assets/sound/Ammo.mp3")]
@@ -159,7 +159,7 @@ package
 			super.initialize();
 			
 			var soundTrans:SoundTransform = new SoundTransform(1)
-			Musics.play(0,0,soundTrans);
+			Musics.play(0,4,soundTrans);
 			
 			onStart();
 		}

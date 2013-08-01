@@ -11,16 +11,19 @@ package
 	import flash.display.Bitmap;
 	import flash.events.Event;
 	import flash.events.KeyboardEvent;
+	import flash.events.TimerEvent;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 	import flash.media.Sound;
 	import flash.media.SoundTransform;
+	import flash.utils.Timer;
 	import flash.utils.setTimeout;
 	
 	import starling.animation.DelayedCall;
 	import starling.core.Starling;
 	import starling.display.Image;
 	import starling.display.Quad;
+	import starling.text.TextField;
 	import starling.textures.Texture;
 	import starling.textures.TextureAtlas;
 	
@@ -86,13 +89,13 @@ package
 		[Embed(source="assets/images/HUD.png")]
 		public var HealthBar:Class;
 		
-		[Embed(source="assets/images/startscreen.jpg")]
+		[Embed(source="assets/images/startscreen_blank.jpg")]
 		public var startScreen:Class;
 		
 		[Embed(source="assets/images/loadscreen.jpg")]
 		public var loadScreen:Class;
 		
-		[Embed(source="assets/images/endscreen.jpg")]
+		[Embed(source="assets/images/losescreen.jpg")]
 		public var endScreen:Class;
 		
 		[Embed(source="assets/sound/Ammo.mp3")]
@@ -116,6 +119,12 @@ package
 		[Embed(source="assets/sound/vampBossLaugh.mp3")]
 		public static const gameOver:Class;
 		
+		[Embed(source="assets/images/Arial Italic.ttf", embedAsCFF="false", fontFamily="Arial")]
+		public static const Arial:Class;
+		
+		private var myTimer:Timer;
+		private var repeat:uint = 1000;
+		private var myText:TextField;
 		private var _hero:ShootingHero;
 		private var _enemies:Array = [];
 		private var _crate:CitrusSprite;
@@ -156,14 +165,36 @@ package
 			super.initialize();
 			
 			var soundTrans:SoundTransform = new SoundTransform(1)
-			Music.play(0,0,soundTrans);
+			Music.play(0,4,soundTrans);
 			
 			var startScreen:CitrusSprite = new CitrusSprite("startScreen", {view:Image.fromBitmap(new startScreen())});
 			startScreen.x = 0;
 			startScreen.y = 0;
 			add(startScreen);
 			
-			setTimeout(onStart, 5000);
+			myText = new TextField(50,50,"10","Arial Italic",50,0xe8e8e8);
+			myText.x = 670;
+			myText.y = 364;
+			addChild(myText);
+			
+			myTimer = new Timer(0,1000);
+			myTimer.start();
+			myTimer.addEventListener(TimerEvent.TIMER, timerHandler);
+			myTimer.addEventListener(TimerEvent.TIMER_COMPLETE, onTimerComplete);
+			
+		}
+		
+		protected function onTimerComplete(event:TimerEvent):void
+		{
+			removeChild(myText);
+			
+			onStart();
+		}
+		
+		protected function timerHandler(event:TimerEvent):void
+		{
+			repeat --;
+			myText.text = "" + int((repeat * 100) / 10000);
 		}
 		
 		private function onStart():void
