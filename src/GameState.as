@@ -92,7 +92,7 @@ package
 		[Embed(source="assets/images/startscreen_blank.jpg")]
 		public var startScreen:Class;
 		
-		[Embed(source="assets/images/loadscreen.jpg")]
+		[Embed(source="assets/images/nextscreen.jpg")]
 		public var loadScreen:Class;
 		
 		[Embed(source="assets/images/losescreen.jpg")]
@@ -187,7 +187,6 @@ package
 		protected function onTimerComplete(event:TimerEvent):void
 		{
 			removeChild(myText);
-			
 			onStart();
 		}
 		

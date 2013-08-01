@@ -85,11 +85,8 @@ package
 		
 		[Embed(source="assets/images/HUD.png")]
 		public var HealthBar:Class;
-//		
-//		[Embed(source="assets/images/startscreen.jpg")]
-//		public var startScreen:Class;
 		
-		[Embed(source="assets/images/loadscreen.jpg")]
+		[Embed(source="assets/images/nextscreen.jpg")]
 		public var loadScreen:Class;
 		
 		[Embed(source="assets/images/winscreen.jpg")]

@@ -111,7 +111,7 @@
 
 		<!-- Display Resolution for the app (either "standard" or "high"). Optional, OSX-only. Default "standard" -->
 		<!-- <requestedDisplayResolution></requestedDisplayResolution> -->
-	<autoOrients>true</autoOrients>
+	<autoOrients>false</autoOrients>
         <fullScreen>true</fullScreen>
         <visible>true</visible>
     </initialWindow>
@@ -136,10 +136,10 @@
 	<!-- The icon the system uses for the application. For at least one resolution,
 	specify the path to a PNG file included in the AIR package. Optional. -->
 	 <icon>
-		<image16x16>../images/icon_16x16x32.png</image16x16>
-		<image32x32>../images/icon_32x32x32.png</image32x32>
-		<image48x48>../images/icon_48x48x32.png</image48x48>
-		<image128x128>../images/icon_128x128x32.png</image128x128>
+		<image16x16>icon_16x16.png</image16x16>
+		<image32x32>icon_32x32.png</image32x32>
+		<image48x48>icon_48x48.png</image48x48>
+		<image128x128>icon_128x128.png</image128x128>
 	</icon>
 
 	<!-- Whether the application handles the update when a user double-clicks an update version
