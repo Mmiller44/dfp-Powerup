@@ -113,6 +113,9 @@ package
 		[Embed(source="assets/sound/Heartbeat.mp3")]
 		public static const heartbeat:Class;
 		
+		[Embed(source="assets/sound/vampBossLaugh.mp3")]
+		public static const gameOver:Class;
+		
 		private var _hero:ShootingHero;
 		private var _enemies:Array = [];
 		private var _crate:CitrusSprite;
@@ -124,6 +127,7 @@ package
 		public static var heartbeating:Sound = new heartbeat() as Sound;
 		public static var HealthSound:Sound = new Health as Sound;
 		public static var Music:Sound = new MusicSong as Sound;
+		public static var gameOverSound:Sound = new gameOver as Sound;
 		private var _Herobitmap:Bitmap;
 		private var _Herotexture:Texture;
 		private var _Heroxml:XML;
@@ -152,7 +156,7 @@ package
 			super.initialize();
 			
 			var soundTrans:SoundTransform = new SoundTransform(1)
-			Music.play(0,3,soundTrans);
+			Music.play(0,0,soundTrans);
 			
 			var startScreen:CitrusSprite = new CitrusSprite("startScreen", {view:Image.fromBitmap(new startScreen())});
 			startScreen.x = 0;
@@ -326,8 +330,8 @@ package
 			
 			if(_hero.hurtDuration <= 600)
 			{
-				_healthFill.view = new Quad(150,25,0xaa5555);
-				_healthFill.x = _hud.x - 50 + _healthFill.width;
+				_healthFill.view = new Quad(200,25,0xaa5555);
+				_healthFill.x = _hud.x - 60 + _healthFill.width;
 			}
 			
 			if(_hero.hurtDuration <= 400)
@@ -355,6 +359,8 @@ package
 				var distance:Number = Point.distance(p1, p2);
 				var radius1:Number = enemy.width / 2;
 				var radius2:Number = enemy.width / 2;
+				
+				trace(_enemies.length);
 				
 				if(!enemy.kill)
 				{
@@ -459,31 +465,32 @@ package
 				{
 					if(distance2 < radius)
 					{
-						_hero.hurtDuration -= 5;
+						_hero.hurtDuration -= 20;
 					}
 				}
 				
 				if(!_wolfBoss.kill)
 				{
-					if(_wolfBoss.hurtDuration <= 500)
+	
+					if(_wolfBoss.hurtDuration <= 250)
 					{
-						_bossHealthFill.view = new Quad(225,25,0xaa5555);
+						_bossHealthFill.view = new Quad(240,25,0xaa5555);
 						_bossHealthFill.x = _bossHud.x + _bossHealthFill.width;
 					}
 					
-					if(_wolfBoss.hurtDuration <= 400)
+					if(_wolfBoss.hurtDuration <= 200)
 					{
 						_bossHealthFill.view = new Quad(200,25,0xaa5555);
 						_bossHealthFill.x = _bossHud.x + _bossHealthFill.width;
 					}
 					
-					if(_wolfBoss.hurtDuration <= 300)
+					if(_wolfBoss.hurtDuration <= 150)
 					{
 						_bossHealthFill.view = new Quad(150,25,0xaa5555);
 						_bossHealthFill.x = _bossHud.x + _bossHealthFill.width;
 					}
 					
-					if(_wolfBoss.hurtDuration <= 200)
+					if(_wolfBoss.hurtDuration <= 100)
 					{
 						_bossHealthFill.view = new Quad(50,25,0xaa5555);
 						_bossHealthFill.x = _bossHud.x + 50 + _bossHealthFill.width;
@@ -495,7 +502,7 @@ package
 					if(!_wolfBoss.kill && bulletDistance2 < radius)
 					{
 						remove(ShootingHero.bullet);
-						_wolfBoss.hurtDuration -= 2;
+						_wolfBoss.hurtDuration -= 5;
 						ShootingHero.bullet.y = 1000000000000;
 						
 						if(_wolfBoss.hurtDuration <= 0)
@@ -531,6 +538,8 @@ package
 				this.killAllObjects();
 				
 				_delayedCall.reset(crateSpawnTimer, 100000000);
+				
+				gameOverSound.play(0,0);
 				
 				_hero = new ShootingHero("hero", {x:stage.stageWidth/2, y:150, width:70, height:125});
 				_hero.name = "gameOver";
@@ -577,7 +586,7 @@ package
 					add(enemy2);
 				}
 				
-				if(_enemyCounter >= 35)
+				if(_enemyCounter >= 36)
 				{
 					_spawning = false;
 				}
@@ -604,7 +613,7 @@ package
 			_wolfBoss = new OurEnemy("BadGuys", {x:1750, y:390, width:70, height:130, leftBound:10, rightBound:1560});
 			_wolfBoss.view = new AnimationSequence(_enemysTextureAtlas,["walk","idle"], "idle");
 			_wolfBoss.speed = 8;
-			_wolfBoss.hurtDuration = 10;
+			_wolfBoss.hurtDuration = 300;
 			add(_wolfBoss);
 			
 			_bossHealthFill = new Platform("bosshealthbar", {x:900, y:-200, width:200, height:20});
@@ -643,7 +652,6 @@ package
 					
 					remove(_crate);
 					_ce.stage.removeEventListener(KeyboardEvent.KEY_DOWN, _hero.onKeyDown);
-					
 				}
 				
 				if(_crate.name == "machineGun")
@@ -722,7 +730,6 @@ package
 					}
 					
 					onUpdate();
-					// Remove the crate from the screen.
 					remove(_crate);
 				}
 			}

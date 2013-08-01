@@ -104,17 +104,20 @@ package
 		[Embed(source="assets/sound/Splat.mp3")]
 		public static const Bite:Class;
 		
-		[Embed(source="assets/sound/werewolfBossGrowl.mp3")]
+		[Embed(source="assets/sound/Kill_Streak.mp3")]
 		public static const Boss:Class;
 		
 		[Embed(source="assets/sound/Health.mp3")]
 		public static const Health:Class;
 		
-		[Embed(source="assets/sound/Satiate Strings.mp3")]
-		public static const MusicSong:Class;
+		[Embed(source="assets/sound/levelTwoMusic.mp3")]
+		public static const MusicSongs:Class;
 		
 		[Embed(source="assets/sound/Heartbeat.mp3")]
 		public static const heartbeat:Class;
+		
+		[Embed(source="assets/sound/vampBossLaugh.mp3")]
+		public static const gameOver:Class;
 		
 		private var _hero:ShootingHero;
 		private var _enemies:Array = [];
@@ -126,7 +129,8 @@ package
 		public static var BossSpeech:Sound = new Boss() as Sound;
 		public static var heartbeating:Sound = new heartbeat() as Sound;
 		public static var HealthSound:Sound = new Health as Sound;
-		public static var Music:Sound = new MusicSong as Sound;
+		public static var Musics:Sound = new MusicSongs as Sound;
+		public static var gameOverSound:Sound = new gameOver as Sound;
 		private var _Herobitmap:Bitmap;
 		private var _Herotexture:Texture;
 		private var _Heroxml:XML;
@@ -155,7 +159,7 @@ package
 			super.initialize();
 			
 			var soundTrans:SoundTransform = new SoundTransform(1)
-			Music.play(0,3,soundTrans);
+			Musics.play(0,0,soundTrans);
 			
 			onStart();
 		}
@@ -324,8 +328,8 @@ package
 			
 			if(_hero.hurtDuration <= 600)
 			{
-				_healthFill.view = new Quad(150,25,0xaa5555);
-				_healthFill.x = _hud.x - 50 + _healthFill.width;
+				_healthFill.view = new Quad(200,25,0xaa5555);
+				_healthFill.x = _hud.x - 60 + _healthFill.width;
 			}
 			
 			if(_hero.hurtDuration <= 400)
@@ -456,31 +460,31 @@ package
 				{
 					if(distance2 < radius)
 					{
-						_hero.hurtDuration -= 5;
+						_hero.hurtDuration -= 20;
 					}
 				}
 				
 				if(!_wolfBoss.kill)
 				{
-					if(_wolfBoss.hurtDuration <= 500)
+					if(_wolfBoss.hurtDuration <= 250)
 					{
-						_bossHealthFill.view = new Quad(225,25,0xaa5555);
+						_bossHealthFill.view = new Quad(240,25,0xaa5555);
 						_bossHealthFill.x = _bossHud.x + _bossHealthFill.width;
 					}
 					
-					if(_wolfBoss.hurtDuration <= 400)
+					if(_wolfBoss.hurtDuration <= 200)
 					{
 						_bossHealthFill.view = new Quad(200,25,0xaa5555);
 						_bossHealthFill.x = _bossHud.x + _bossHealthFill.width;
 					}
 					
-					if(_wolfBoss.hurtDuration <= 300)
+					if(_wolfBoss.hurtDuration <= 150)
 					{
 						_bossHealthFill.view = new Quad(150,25,0xaa5555);
 						_bossHealthFill.x = _bossHud.x + _bossHealthFill.width;
 					}
 					
-					if(_wolfBoss.hurtDuration <= 200)
+					if(_wolfBoss.hurtDuration <= 100)
 					{
 						_bossHealthFill.view = new Quad(50,25,0xaa5555);
 						_bossHealthFill.x = _bossHud.x + 50 + _bossHealthFill.width;
@@ -508,7 +512,7 @@ package
 								_delayedCall.reset(crateSpawnTimer, 100000000);
 								
 								_hero = new ShootingHero("hero", {x:stage.stageWidth/2, y:150, width:70, height:125});
-								_hero.name = "nextLevel";
+								_hero.name = "gameOver";
 								add(_hero);
 								
 								var youWin:CitrusSprite = new CitrusSprite("youWin", {view:Image.fromBitmap(new winScreen())});
@@ -526,6 +530,8 @@ package
 				_hero.x = 10;
 				_hero.name = "gameOver";
 				this.killAllObjects();
+				
+				gameOverSound.play(0,0);
 				
 				_delayedCall.reset(crateSpawnTimer, 100000000);
 				
@@ -569,7 +575,7 @@ package
 					add(enemy2);
 				}
 				
-				if(_enemyCounter >= 35)
+				if(_enemyCounter >= 36)
 				{
 					_spawning = false;
 				}
@@ -596,7 +602,7 @@ package
 			_wolfBoss = new OurEnemy("BadGuys", {x:1750, y:390, width:70, height:130, leftBound:10, rightBound:1560});
 			_wolfBoss.view = new AnimationSequence(_enemysTextureAtlas,["walk","idle"], "idle");
 			_wolfBoss.speed = 8;
-			_wolfBoss.hurtDuration = 10;
+			_wolfBoss.hurtDuration = 300;
 			add(_wolfBoss);
 			
 			_bossHealthFill = new Platform("bosshealthbar", {x:900, y:-200, width:200, height:20});

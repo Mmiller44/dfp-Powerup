@@ -74,8 +74,8 @@ package
 			
 			if(event.keyCode == 13 && this.name == "heroRifle")
 			{
-				//Machine_Gun_Shot.play(0,0);
-								
+				ShootSound.play(0,0);
+				
 				if(_inverted)
 				{
 					bullet = new Missile("bullet"+bulletcounter, {x:x - width, y:this.y + 10, width:5, height:48, speed:500, angle:180});
@@ -90,7 +90,7 @@ package
 				_rifleBullets++;
 				_ce.state.add(bullet);
 				
-				if(_rifleBullets >= 10)
+				if(_rifleBullets >= 25)
 				{
 					_rifleBullets = 0;
 					this.name = "heroPistol";
@@ -120,7 +120,7 @@ package
 				_gatlingBullets++
 				_ce.state.add(bullet);
 				
-				if(_gatlingBullets >= 100)
+				if(_gatlingBullets >= 40)
 				{
 					_gatlingBullets = 0;
 					this.name = "heroPistol";
